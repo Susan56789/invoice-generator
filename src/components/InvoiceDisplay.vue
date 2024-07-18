@@ -8,6 +8,7 @@
                 </div>
                 <div class="border-bottom pb-3 mb-3">
                     <h2 class="h6">Invoice</h2>
+                    <p class="small"><strong>Invoice Number:</strong> {{ generateInvoiceNumber }}</p>
                     <p class="small"><strong>Client Name:</strong> {{ invoice.clientName }}</p>
                     <p class="small"><strong>Client Email:</strong> {{ invoice.clientEmail }}</p>
                     <p class="small"><strong>Invoice Date:</strong> {{ invoice.invoiceDate }}</p>
@@ -26,8 +27,8 @@
                             <tr v-for="item in invoice.items" :key="item.description">
                                 <td>{{ item.description }}</td>
                                 <td>{{ item.quantity }}</td>
-                                <td>{{ item.price }}</td>
-                                <td>{{ item.quantity * item.price }}</td>
+                                <td>{{ formatCurrency(item.price) }}</td>
+                                <td>{{ formatCurrency(item.quantity * item.price) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -69,25 +70,35 @@ export default {
     computed: {
         totalAmount() {
             return this.invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0);
+        },
+        generateInvoiceNumber() {
+            const date = new Date(this.invoice.invoiceDate);
+            const formattedDate = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
+
+            const nameParts = this.invoice.clientName.split(' ');
+            const firstInitial = nameParts[0][0].toUpperCase();
+            const lastInitial = nameParts[nameParts.length - 1][0].toUpperCase();
+
+            return `${formattedDate}${firstInitial}${lastInitial}`;
         }
     },
     methods: {
         async downloadPDF() {
             const element = document.getElementById('invoice-content');
             const canvas = await html2canvas(element, {
-                scale: 2, // Increase resolution
-                useCORS: true, // Allow loading of external images
+                scale: 2,
+                useCORS: true,
             });
             const imgData = canvas.toDataURL('image/png');
 
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'px',
-                format: [canvas.width / 2, canvas.height / 2] // Adjust size to match scale
+                format: [canvas.width / 2, canvas.height / 2]
             });
 
             pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
-            pdf.save('invoice.pdf');
+            pdf.save(`invoice_${this.generateInvoiceNumber}.pdf`);
         },
         formatCurrency(value) {
             const numericValue = parseFloat(value);
