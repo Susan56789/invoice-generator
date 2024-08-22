@@ -18,6 +18,10 @@
                 @update:item="updateItem(index, $event)" @remove="removeItem(index)" />
             <button type="button" @click="addItem">Add Item</button>
         </div>
+        <div>
+            <label for="paidAmount">Paid Amount:</label>
+            <input type="number" v-model.number="invoice.paidAmount" id="paidAmount" required min="0" step="0.01">
+        </div>
         <button type="submit">Generate Invoice</button>
     </form>
 </template>
@@ -38,7 +42,8 @@ export default {
             invoiceDate: '',
             items: [
                 { description: '', quantity: 1, price: 0 }
-            ]
+            ],
+            paidAmount: 0
         });
 
         const addItem = () => {

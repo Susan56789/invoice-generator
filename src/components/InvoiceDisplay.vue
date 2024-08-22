@@ -33,6 +33,9 @@
                         </tbody>
                     </table>
                     <p class="small"><strong>Total Amount:</strong> {{ formatCurrency(totalAmount) }}</p>
+                    <p class="small"><strong>Paid Amount:</strong> {{ formatCurrency(invoice.paidAmount) }}</p>
+                    <p class="small"><strong>Pending Amount:</strong> {{ formatCurrency(pendingAmount) }}</p>
+                    <p class="small"><strong>Status:</strong> {{ invoiceStatus }}</p>
                 </div>
                 <hr class="border-top border-2 border-dark my-3">
                 <div class="text-center">
@@ -71,50 +74,44 @@ export default {
         totalAmount() {
             return this.invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0);
         },
+        pendingAmount() {
+            return this.totalAmount - this.invoice.paidAmount;
+        },
+        invoiceStatus() {
+            return this.pendingAmount > 0 ? 'Pending' : 'Paid in Full';
+        },
         generateInvoiceNumber() {
             const date = new Date(this.invoice.invoiceDate);
-            const formattedDate = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
-
-            const nameParts = this.invoice.clientName.split(' ');
-            const firstInitial = nameParts[0][0].toUpperCase();
-            const lastInitial = nameParts[nameParts.length - 1][0].toUpperCase();
-
-            return `${formattedDate}${firstInitial}${lastInitial}`;
+            const formattedDate = `${date.getFullYear()}${(date.getMonth() + 1)
+                .toString()
+                .padStart(2, '0')}${date
+                    .getDate()
+                    .toString()
+                    .padStart(2, '0')}`;
+            const randomDigits = Math.floor(Math.random() * 9000) + 1000;
+            return `INV-${formattedDate}-${randomDigits}`;
         }
     },
     methods: {
-        async downloadPDF() {
-            const element = document.getElementById('invoice-content');
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-            });
-            const imgData = canvas.toDataURL('image/png');
-
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'px',
-                format: [canvas.width / 2, canvas.height / 2]
-            });
-
-            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
-            pdf.save(`invoice_${this.generateInvoiceNumber}.pdf`);
-        },
         formatCurrency(value) {
             const numericValue = parseFloat(value);
             return isNaN(numericValue) ? '-' : numericValue.toLocaleString('en-KE', { style: 'currency', currency: 'KES' });
         },
+        downloadPDF() {
+            const invoiceContent = document.getElementById('invoice-content');
+            html2canvas(invoiceContent).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF();
+                pdf.addImage(imgData, 'PNG', 0, 0);
+                pdf.save(`invoice-${this.generateInvoiceNumber}.pdf`);
+            });
+        }
     }
 };
 </script>
 
 <style scoped>
-.table-bordered {
-    border: 1px solid #dee2e6;
-}
-
-.table-bordered th,
-.table-bordered td {
-    border: 1px solid #dee2e6;
+.card {
+    max-width: 700px;
 }
 </style>
